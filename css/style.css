@@ -23,8 +23,14 @@ body {
   line-height: 1.5;
 }
 
-/* Подключаем Inter */
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap");
+        /* Comfortaa для всех заголовков */
+        h1, h2, h3, .app-header h1, .calendar-header h2, .date-title h3 {
+            font-family: 'Comfortaa', cursive;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+
+
 
 /* ===== КОНТЕЙНЕР ===== */
 .app {
@@ -62,6 +68,22 @@ body {
   font-weight: 400;
   margin-left: 4px;
 }
+
+
+
+.app-header h2 {
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: #1d1d1f;
+}
+
+.app-header h2 span {
+  color: #8e8e93;
+  font-weight: 300;
+  margin-left: 4px;
+}
+
 
 .header-actions {
   display: flex;
