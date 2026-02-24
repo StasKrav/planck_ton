@@ -108,6 +108,7 @@ function renderTasks() {
   });
 
   tasksList.innerHTML = tasksHtml;
+  setTimeout(checkScrollable, 100);
 }
 
 function updateStats() {
@@ -230,4 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
   renderTasks();
   updateStats();
+
+document.addEventListener('DOMContentLoaded', checkScrollable);
 });
