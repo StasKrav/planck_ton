@@ -301,6 +301,33 @@ body {
 /* Список задач */
 .tasks-list {
   list-style: none;
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden; /* Скрываем горизонтальную прокрутку */
+  padding-right: 12px; /* Отступ справа для скроллбара */
+  margin-top: 16px;
+
+  /* Кастомный скроллбар */
+  scrollbar-width: thin;
+  scrollbar-color: #c6c6c8 transparent;
+}
+
+/* Для WebKit браузеров (Chrome, Safari, Edge) */
+.tasks-list::-webkit-scrollbar {
+  width: 4px; /* Очень тонкий скроллбар */
+}
+
+.tasks-list::-webkit-scrollbar-track {
+  background: transparent; /* Прозрачный трек */
+}
+
+.tasks-list::-webkit-scrollbar-thumb {
+  background: #c6c6c8; /* Серый бегунок */
+  border-radius: 20px;
+}
+
+.tasks-list::-webkit-scrollbar-thumb:hover {
+  background: #8e8e93; /* Темнее при наведении */
 }
 
 .task-item {
@@ -310,6 +337,26 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   animation: fadeIn 0.3s ease;
   cursor: default;
+  margin-right: 4px;
+}
+
+/* Индикатор, что есть ещё задачи */
+.tasks-list::after {
+  content: "";
+  display: block;
+  height: 1px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Показываем градиент внизу, если есть скролл */
+.tasks-list.is-scrollable::after {
+  opacity: 1;
+  background: linear-gradient(to bottom, transparent, #f8f9fa);
+  position: sticky;
+  bottom: 0;
+  height: 20px;
+  pointer-events: none;
 }
 
 @keyframes fadeIn {
