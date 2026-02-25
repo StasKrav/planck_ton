@@ -67,15 +67,13 @@ function renderTasks() {
   document.getElementById("selectedDate").textContent = formatted;
 
   let completedInDay = tasks.filter((_, i) => completed.includes(i)).length;
-  document.getElementById("tasksCount").textContent =
-    `${completedInDay}/${tasks.length}`;
+  document.getElementById("tasksCount").textContent = `${completedInDay}/${tasks.length}`;
   document.getElementById("progressDisplay").textContent = tasks.length
     ? `${Math.round((completedInDay / tasks.length) * 100)}%`
     : "—";
 
   if (tasks.length === 0) {
-    tasksList.innerHTML =
-      '<li class="empty-message">Нет задач на этот день</li>';
+    tasksList.innerHTML = '<li class="empty-message">Нет задач на этот день</li>';
     return;
   }
 
@@ -83,32 +81,31 @@ function renderTasks() {
   tasks.forEach((task, index) => {
     const isCompleted = completed.includes(index);
     tasksHtml += `
-                    <li class="task-item ${isCompleted ? "completed" : ""} ${index === state.selectedTaskIndex ? "selected" : ""}"
-                        onclick="selectTask(${index})">
-                        <input type="checkbox" class="task-checkbox" 
-                            ${isCompleted ? "checked" : ""} 
-                            onclick="event.stopPropagation(); toggleTask(${index})">
-                        <span class="task-content">${task}</span>
-                        <div class="task-actions">
-                            <button class="icon-btn edit-btn" title="Редактировать">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M12 20H21M3 20H4L18 6L16 4L2 18V20H3Z" />
-                                    <path d="M16 4L20 8" />
-                                </svg>
-                            </button>
-                            <button class="icon-btn delete-btn" title="Удалить">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <path d="M18 6L6 18" />
-                                    <path d="M6 6L18 18" />
-                                </svg>
-                            </button>
-                        </div>
-                    </li>
-                `;
+      <li class="task-item ${isCompleted ? "completed" : ""} ${index === state.selectedTaskIndex ? "selected" : ""}"
+          onclick="selectTask(${index})">
+          <input type="checkbox" class="task-checkbox" 
+              ${isCompleted ? "checked" : ""} 
+              onclick="event.stopPropagation(); toggleTask(${index})">
+          <span class="task-content">${task}</span>
+          <div class="task-actions">
+              <button class="icon-btn edit-btn" title="Редактировать" onclick="event.stopPropagation(); editTask(${index})">
+                  <svg class="icon" viewBox="0 0 24 24">
+                      <path d="M12 20H21M3 20H4L18 6L16 4L2 18V20H3Z" />
+                      <path d="M16 4L20 8" />
+                  </svg>
+              </button>
+              <button class="icon-btn delete-btn" title="Удалить" onclick="event.stopPropagation(); deleteTask(${index})">
+                  <svg class="icon" viewBox="0 0 24 24">
+                      <path d="M18 6L6 18" />
+                      <path d="M6 6L18 18" />
+                  </svg>
+              </button>
+          </div>
+      </li>
+    `;
   });
 
   tasksList.innerHTML = tasksHtml;
-  // setTimeout(checkScrollable, 100);
 }
 
 function updateStats() {
@@ -125,6 +122,9 @@ function updateStats() {
 function selectDate(dateStr) {
   state.selectedDate = dateStr;
   state.selectedTaskIndex = -1;
+  
+  clearAndHighlightInput(); // Очищаем и подсвечиваем
+  
   renderCalendar();
   renderTasks();
 }
@@ -173,7 +173,7 @@ function editTask(index) {
 }
 
 function deleteTask(index) {
-  if (!confirm("Удалить задачу?")) return;
+  // if (!confirm("Удалить задачу?")) return;
 
   state.tasks[state.selectedDate].splice(index, 1);
   if (state.completed[state.selectedDate]) {
@@ -227,6 +227,56 @@ window.onclick = (e) => {
   if (e.target === modal) modal.style.display = "none";
 };
 
+function clearAndHighlightInput() {
+  const taskInput = document.getElementById("taskInput");
+  const wrapper = taskInput?.parentElement;
+  
+  if (!wrapper) return;
+  
+  // Очищаем поле
+  taskInput.value = "";
+  
+  // Добавляем подсветку
+  wrapper.style.transition = "border-color 0.2s, box-shadow 0.2s";
+  wrapper.style.borderColor = "#1d1d1f";
+  wrapper.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
+  
+  // Убираем подсветку через небольшую задержку
+  setTimeout(() => {
+    wrapper.style.borderColor = "rgba(0, 0, 0, 0.06)";
+    wrapper.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.02)";
+  }, 300);
+  
+  // Опционально: вибрируем поле (шутка, но можно добавить)
+  wrapper.style.transform = "scale(1.02)";
+  setTimeout(() => {
+    wrapper.style.transform = "scale(1)";
+  }, 150);
+}
+
+
+
+function setupTaskInput() {
+  const taskInput = document.getElementById("taskInput");
+  
+  // Обработчик для Enter
+  taskInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addTask();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      taskInput.value = ""; // Очистка поля
+      taskInput.blur(); // Убираем фокус
+    }
+  });
+
+
+  // Опционально: автофокус на поле ввода
+  taskInput.focus();
+}
+
+
 // function checkScrollable() {
 //   const list = document.querySelector(".tasks-list");
 //   if (list) {
@@ -238,10 +288,14 @@ window.onclick = (e) => {
 //   }
 // }
 
+// Вызов в DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
   renderTasks();
   updateStats();
+  setupTaskInput();
+
+
 
   // document.addEventListener("DOMContentLoaded", checkScrollable);
 });
