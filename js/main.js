@@ -15,9 +15,13 @@ function renderCalendar() {
   const year = state.currentDate.getFullYear();
   const month = state.currentDate.getMonth();
 
-  document.getElementById("monthYear").textContent = new Date(year, month)
-    .toLocaleDateString("ru-RU", { month: "long", year: "numeric" })
-    .toUpperCase();
+  let monthYearText = new Date(year, month)
+    .toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+    
+  // Убираем " г." в конце
+  monthYearText = monthYearText.replace(" г.", "");
+    
+  document.getElementById("monthYear").textContent = monthYearText.toUpperCase();
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
