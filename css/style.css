@@ -23,14 +23,17 @@ body {
   line-height: 1.5;
 }
 
-        /* Comfortaa для всех заголовков */
-        h1, h2, h3, .app-header h1, .calendar-header h2, .date-title h3 {
-            font-family: 'Comfortaa', cursive;
-            font-weight: 500;
-            letter-spacing: -0.02em;
-        }
-
-
+/* Comfortaa для всех заголовков */
+h1,
+h2,
+h3,
+.app-header h1,
+.calendar-header h2,
+.date-title h3 {
+  font-family: "Comfortaa", cursive;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
 
 /* ===== КОНТЕЙНЕР ===== */
 .app {
@@ -69,8 +72,6 @@ body {
   margin-left: 4px;
 }
 
-
-
 .app-header h2 {
   font-size: 16px;
   font-weight: 300;
@@ -83,7 +84,6 @@ body {
   font-weight: 300;
   margin-left: 4px;
 }
-
 
 .header-actions {
   display: flex;

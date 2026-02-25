@@ -227,10 +227,21 @@ window.onclick = (e) => {
   if (e.target === modal) modal.style.display = "none";
 };
 
+function checkScrollable() {
+  const list = document.querySelector(".tasks-list");
+  if (list) {
+    if (list.scrollHeight > list.clientHeight) {
+      list.classList.add("is-scrollable");
+    } else {
+      list.classList.remove("is-scrollable");
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
   renderTasks();
   updateStats();
 
-document.addEventListener('DOMContentLoaded', checkScrollable);
+  document.addEventListener("DOMContentLoaded", checkScrollable);
 });
