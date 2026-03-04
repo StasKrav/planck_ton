@@ -4,11 +4,68 @@ let state = {
   tasks: JSON.parse(localStorage.getItem("plannerTasks")) || {},
   completed: JSON.parse(localStorage.getItem("plannerCompleted")) || {},
   selectedTaskIndex: -1,
+  lastCleanup: localStorage.getItem("plannerLastCleanup") || null
 };
 
 function saveToStorage() {
   localStorage.setItem("plannerTasks", JSON.stringify(state.tasks));
   localStorage.setItem("plannerCompleted", JSON.stringify(state.completed));
+  if (state.lastCleanup) {
+    localStorage.setItem("plannerLastCleanup", state.lastCleanup);
+  }
+}
+
+// Проверка, является ли дата предыдущей
+function isPreviousDate(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const checkDate = new Date(dateStr);
+  checkDate.setHours(0, 0, 0, 0);
+  
+  return checkDate < today;
+}
+
+// Очистка задач за предыдущие дни
+function cleanupPreviousDays() {
+  const today = new Date().toISOString().split("T")[0];
+  
+  // Проверяем, делали ли уже очистку сегодня
+  if (state.lastCleanup === today) {
+    return;
+  }
+  
+  let cleanedCount = 0;
+  const datesToDelete = [];
+  
+  // Собираем все даты, которые меньше сегодняшней
+  Object.keys(state.tasks).forEach(date => {
+    if (isPreviousDate(date)) {
+      datesToDelete.push(date);
+    }
+  });
+  
+  // Удаляем задачи за предыдущие дни
+  datesToDelete.forEach(date => {
+    cleanedCount += (state.tasks[date]?.length || 0);
+    delete state.tasks[date];
+    delete state.completed[date];
+  });
+  
+  if (cleanedCount > 0) {
+    console.log(`Автоматически удалено ${cleanedCount} задач за предыдущие дни`);
+  }
+  
+  // Обновляем дату последней очистки
+  state.lastCleanup = today;
+  
+  // Если текущая выбранная дата - предыдущий день, переключаем на сегодня
+  if (isPreviousDate(state.selectedDate)) {
+    state.selectedDate = today;
+    state.selectedTaskIndex = -1;
+  }
+  
+  saveToStorage();
 }
 
 function renderCalendar() {
@@ -18,7 +75,6 @@ function renderCalendar() {
   let monthYearText = new Date(year, month)
     .toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
     
-  // Убираем " г." в конце
   monthYearText = monthYearText.replace(" г.", "");
     
   document.getElementById("monthYear").textContent = monthYearText.toUpperCase();
@@ -46,11 +102,14 @@ function renderCalendar() {
       today.getFullYear() === year;
     const isSelected = dateStr === state.selectedDate;
     const hasTasks = state.tasks[dateStr] && state.tasks[dateStr].length > 0;
+    
+    const isPast = isPreviousDate(dateStr) && !isToday;
 
     let classes = "calendar-day";
     if (isToday) classes += " today";
     if (isSelected) classes += " selected";
     if (hasTasks) classes += " has-tasks";
+    if (isPast) classes += " past-day";
 
     calendarHtml += `<div class="${classes}" onclick="selectDate('${dateStr}')">${day}</div>`;
   }
@@ -127,7 +186,7 @@ function selectDate(dateStr) {
   state.selectedDate = dateStr;
   state.selectedTaskIndex = -1;
   
-  clearAndHighlightInput(); // Очищаем и подсвечиваем
+  clearAndHighlightInput();
   
   renderCalendar();
   renderTasks();
@@ -138,10 +197,17 @@ function selectTask(index) {
   renderTasks();
 }
 
+// ВАЖНО: функция addTask полностью восстановлена!
 function addTask() {
   const input = document.getElementById("taskInput");
   const text = input.value.trim();
   if (!text) return;
+  
+  // Проверяем, не пытается ли пользователь добавить задачу в прошлый день
+  if (isPreviousDate(state.selectedDate)) {
+    alert("Нельзя добавлять задачи в прошедшие дни. Переключитесь на сегодня или будущий день.");
+    return;
+  }
 
   if (!state.tasks[state.selectedDate]) state.tasks[state.selectedDate] = [];
   state.tasks[state.selectedDate].push(text);
@@ -177,8 +243,6 @@ function editTask(index) {
 }
 
 function deleteTask(index) {
-  // if (!confirm("Удалить задачу?")) return;
-
   state.tasks[state.selectedDate].splice(index, 1);
   if (state.completed[state.selectedDate]) {
     state.completed[state.selectedDate] = state.completed[state.selectedDate]
@@ -237,69 +301,79 @@ function clearAndHighlightInput() {
   
   if (!wrapper) return;
   
-  // Очищаем поле
   taskInput.value = "";
   
-  // Добавляем подсветку
   wrapper.style.transition = "border-color 0.2s, box-shadow 0.2s";
   wrapper.style.borderColor = "#1d1d1f";
   wrapper.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.05)";
   
-  // Убираем подсветку через небольшую задержку
   setTimeout(() => {
     wrapper.style.borderColor = "rgba(0, 0, 0, 0.06)";
     wrapper.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.02)";
   }, 300);
   
-  // Опционально: вибрируем поле (шутка, но можно добавить)
   wrapper.style.transform = "scale(1.02)";
   setTimeout(() => {
     wrapper.style.transform = "scale(1)";
   }, 150);
 }
 
-
-
 function setupTaskInput() {
   const taskInput = document.getElementById("taskInput");
   
-  // Обработчик для Enter
   taskInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       addTask();
     } else if (event.key === "Escape") {
       event.preventDefault();
-      taskInput.value = ""; // Очистка поля
-      taskInput.blur(); // Убираем фокус
+      taskInput.value = "";
+      taskInput.blur();
     }
   });
-
-
-  // Опционально: автофокус на поле ввода
+  
   taskInput.focus();
 }
 
+// Функция для ручной очистки прошлых дней
+function forceCleanupPreviousDays() {
+  const today = new Date().toISOString().split("T")[0];
+  let cleanedCount = 0;
+  const datesToDelete = [];
+  
+  Object.keys(state.tasks).forEach(date => {
+    if (isPreviousDate(date)) {
+      datesToDelete.push(date);
+    }
+  });
+  
+  datesToDelete.forEach(date => {
+    cleanedCount += (state.tasks[date]?.length || 0);
+    delete state.tasks[date];
+    delete state.completed[date];
+  });
+  
+  if (cleanedCount > 0) {
+    alert(`Удалено ${cleanedCount} задач за предыдущие дни`);
+  } else {
+    alert("Нет задач за предыдущие дни");
+  }
+  
+  state.selectedDate = today;
+  state.lastCleanup = today;
+  state.selectedTaskIndex = -1;
+  
+  saveToStorage();
+  renderCalendar();
+  renderTasks();
+  updateStats();
+}
 
-// function checkScrollable() {
-//   const list = document.querySelector(".tasks-list");
-//   if (list) {
-//     if (list.scrollHeight > list.clientHeight) {
-//       list.classList.add("is-scrollable");
-//     } else {
-//       list.classList.remove("is-scrollable");
-//     }
-//   }
-// }
-
-// Вызов в DOMContentLoaded
+// Инициализация
 document.addEventListener("DOMContentLoaded", () => {
+  cleanupPreviousDays();
   renderCalendar();
   renderTasks();
   updateStats();
   setupTaskInput();
-
-
-
-  // document.addEventListener("DOMContentLoaded", checkScrollable);
 });
